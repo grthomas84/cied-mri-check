@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CIED MRI Check</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#fbf1ef; --panel:#ffffff; --ink:#3a1018; --muted:#86606a; --line:#f0d9d6; --soft:#fdf7f6;
+  --blue:#7b1e34; --blue2:#c62839; --sky:#fbe5e0; --teal:#c62839; --green:#e0705f; --mint:#fde9e2;
+  --grad:#7b1e34;
+  --ok:#1f8a4c; --ok-bg:#e2f5ea; --warn:#a86200; --warn-bg:#fff4df; --stop:#c0392b; --stop-bg:#fde9e7; --unk:#3d6378; --unk-bg:#e6eff4;
+}
+@media (prefers-color-scheme: dark){
+  :root{ --bg:#1c0b10; --panel:#2a1218; --ink:#f8e6e8; --muted:#c09aa2; --line:#4a222c; --soft:#220e14;
+    --blue:#f07a8a; --blue2:#ff6b6b; --sky:#3d1820; --teal:#ff8f7a; --green:#f4a08e; --mint:#3a1e1c;
+    --ok:#5fd394; --ok-bg:#12352a; --warn:#f3b552; --warn-bg:#35280f; --stop:#ff8a7a; --stop-bg:#3a1713; --unk:#a9c6d4; --unk-bg:#17303b; }
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:"Plus Jakarta Sans",system-ui,-apple-system,Segoe UI,Roboto,sans-serif;font-size:15px;line-height:1.5}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace}
+.hero{background:var(--grad);color:#fff;padding:28px 20px 70px;min-height:150px;text-align:center}
+.hero .ic{width:52px;height:52px;border-radius:16px;background:rgba(255,255,255,.18);display:inline-grid;place-items:center;margin-bottom:10px}
+.hero{position:relative;padding-top:24px}
+.brand{background:#fff;border-radius:16px;padding:8px 14px;display:inline-flex;align-items:center;box-shadow:0 4px 14px rgba(0,0,0,.18);position:absolute;top:12px;left:8px}
+.brand img{height:52px;width:auto;display:block}
+@media (max-width:820px){.brand{position:static;display:flex;width:fit-content;margin:-16px auto 16px -12px}.brand img{height:44px}}
+.hero h1{margin:0;font-size:26px;font-weight:800;letter-spacing:-.02em}
+.hero p{margin:4px 0 0;opacity:.88;font-size:14px}
+.chip-ai{display:inline-block;margin-top:12px;font-size:12px;font-weight:600;padding:4px 12px;border-radius:999px;background:rgba(255,255,255,.18)}
+.wrap{max-width:780px;margin:-48px auto 0;padding:0 16px 40px;position:relative}
+.card{background:var(--panel);border-radius:22px;padding:22px;margin-bottom:16px;box-shadow:0 6px 24px rgba(58,16,24,.08);border:1px solid var(--line)}
+.card h2{font-size:16px;margin:0 0 14px;font-weight:700;display:flex;align-items:center;gap:10px}
+.num{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--grad);color:#fff;font-size:13px;font-weight:800;flex:none}
+/* bubble tabs */
+.tabs{display:inline-flex;gap:4px;padding:4px;background:var(--sky);border-radius:999px;margin-bottom:14px;flex-wrap:wrap}
+.tab{appearance:none;border:0;background:transparent;color:var(--blue);font:inherit;font-weight:600;font-size:13.5px;padding:8px 16px;border-radius:999px;cursor:pointer;transition:.15s}
+.tab[aria-selected="true"]{background:var(--grad);color:#fff;box-shadow:0 3px 10px rgba(123,30,52,.3)}
+.pane[hidden]{display:none}
+textarea{width:100%;min-height:150px;resize:vertical;border:1.5px solid var(--line);border-radius:16px;padding:12px 14px;font:13px/1.5 "IBM Plex Mono",monospace;background:var(--soft);color:var(--ink)}
+textarea:focus,input:focus,select:focus{outline:2px solid var(--blue2);outline-offset:1px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px}
+button.btn{appearance:none;border:0;background:var(--blue);color:#fff;font:inherit;font-weight:700;font-size:13.5px;padding:9px 18px;border-radius:999px;cursor:pointer}
+button.btn.secondary{background:var(--sky);color:var(--blue)}
+button.btn.green{background:var(--mint);color:var(--green)}
+button.btn.small{font-size:12.5px;padding:6px 13px}
+button.btn:disabled{opacity:.45;cursor:not-allowed}
+button.link{appearance:none;border:0;background:none;color:var(--muted);font:inherit;font-size:12.5px;cursor:pointer;padding:0 4px;text-decoration:underline}
+.hint{font-size:12.5px;color:var(--muted)}
+.drop{border:2px dashed color-mix(in srgb,var(--blue2) 45%,transparent);border-radius:18px;padding:28px;text-align:center;color:var(--blue);cursor:pointer;background:var(--sky);font-weight:600}
+.drop.over{border-color:var(--green);background:var(--mint);color:var(--green)}
+.drop .hint{font-weight:400;margin-top:2px}
+.thumbs{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+.thumb{position:relative;width:96px;height:72px;border-radius:12px;overflow:hidden;border:1px solid var(--line)}
+.thumb img{width:100%;height:100%;object-fit:cover}
+.thumb button{position:absolute;top:4px;right:4px;border:0;border-radius:50%;width:20px;height:20px;background:rgba(0,0,0,.55);color:#fff;cursor:pointer;font-size:12px;line-height:20px;padding:0}
+.status{font-size:13px;margin-top:8px;min-height:1em;color:var(--green);font-weight:600}
+.status.err{color:var(--stop)}
+/* components */
+.comp{border:1.5px solid var(--line);border-radius:16px;padding:12px;margin-bottom:10px;background:var(--soft)}
+.comp-top{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+.comp-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+@media (max-width:560px){.comp-grid{grid-template-columns:1fr}}
+.comp input{width:100%;font:inherit;font-size:13.5px;padding:8px 12px;border:1.5px solid var(--line);border-radius:999px;background:var(--panel);color:var(--ink)}
+.comp input.mono{font-family:"IBM Plex Mono",monospace;font-size:13px}
+.match{font-size:12px;color:var(--muted);margin-top:8px}
+.x{border:0;background:none;color:var(--muted);cursor:pointer;font-size:18px;padding:0 6px;margin-left:auto}
+.pill{display:inline-block;font-size:11.5px;font-weight:700;padding:3px 10px;border-radius:999px;white-space:nowrap}
+.pill.ok{background:var(--ok-bg);color:var(--ok)} .pill.warn{background:var(--warn-bg);color:var(--warn)}
+.pill.stop{background:var(--stop-bg);color:var(--stop)} .pill.unk{background:var(--unk-bg);color:var(--unk)}
+/* chips */
+.q{margin-bottom:14px}
+.q:last-child{margin-bottom:0}
+.q > label,.qlab{display:block;font-size:12.5px;font-weight:700;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{appearance:none;border:1.5px solid var(--line);background:var(--panel);color:var(--ink);font:inherit;font-size:13px;font-weight:600;padding:7px 14px;border-radius:999px;cursor:pointer;transition:.12s}
+.chip:hover{border-color:var(--blue2)}
+.chip.on{background:var(--blue);border-color:var(--blue);color:#fff}
+.chip.flag.on{background:var(--green);border-color:var(--green)}
+.chip.flag.on.bad{background:var(--stop);border-color:var(--stop)}
+select.hidden-sel,input.hidden-cb{display:none}
+.q input[type=date]{font:inherit;font-size:13.5px;padding:7px 14px;border:1.5px solid var(--line);border-radius:999px;background:var(--panel);color:var(--ink)}
+.from{font-size:11px;color:var(--teal);font-weight:600;text-transform:none;letter-spacing:0;margin-left:6px}
+.empty{color:var(--muted);text-align:center;padding:18px 10px;font-size:14px}
+/* big CTA */
+.cta{display:block;width:100%;appearance:none;border:0;background:var(--blue2);color:#fff;font:inherit;font-size:19px;font-weight:800;padding:18px;border-radius:999px;cursor:pointer;box-shadow:0 10px 28px rgba(198,40,57,.32);letter-spacing:-.01em;margin:6px 0 18px;transition:transform .1s}
+.cta:hover{transform:translateY(-1px)}
+.cta:active{transform:translateY(1px)}
+/* result */
+#resultCard[hidden]{display:none}
+.verdict{border-radius:20px;padding:20px;margin-bottom:16px;text-align:center}
+.verdict.ok{background:var(--ok-bg)} .verdict.warn{background:var(--warn-bg)} .verdict.stop{background:var(--stop-bg)} .verdict.unk{background:var(--unk-bg)}
+.verdict .big{font-size:34px;line-height:1}
+.verdict h3{margin:8px 0 4px;font-size:21px;font-weight:800;letter-spacing:-.01em}
+.verdict.ok h3{color:var(--ok)} .verdict.warn h3{color:var(--warn)} .verdict.stop h3{color:var(--stop)} .verdict.unk h3{color:var(--unk)}
+.verdict p{margin:0;font-size:14px;color:var(--ink)}
+.facts{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:6px}
+@media (max-width:620px){.facts{grid-template-columns:1fr 1fr}}
+.fact{background:var(--sky);border-radius:16px;padding:10px 12px}
+.fact:nth-child(even){background:var(--mint)}
+.fact .k{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.fact .v{font-size:13.5px;font-weight:700;margin-top:2px}
+.sec{margin:16px 0 0}
+.sec h4{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--blue);margin:0 0 8px;font-weight:800}
+ol.chk{margin:0;padding-left:20px;font-size:14px}
+ol.chk li{margin-bottom:4px}
+ul.items{margin:0;padding:0;list-style:none}
+ul.items li{padding:9px 14px;border-radius:14px;margin-bottom:6px;font-size:13.5px}
+ul.items li.stop{background:var(--stop-bg)} ul.items li.warn{background:var(--warn-bg)} ul.items li.info{background:var(--sky)}
+.rec{font-size:11px;color:var(--muted);font-weight:600;white-space:nowrap}
+details{border-radius:14px;padding:10px 14px;margin-top:8px;background:var(--soft);border:1px solid var(--line)}
+details summary{cursor:pointer;font-weight:700;font-size:13.5px;color:var(--blue)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+td{padding:7px 4px;border-bottom:1px solid var(--line);vertical-align:top}
+.res-actions{display:flex;justify-content:flex-end;margin-top:14px}
+footer{color:var(--muted);font-size:12px;text-align:center;padding:4px 10px 10px;line-height:1.6}
+footer a{color:var(--blue);text-decoration:none;font-weight:600}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--panel);padding:8px 16px;border-radius:999px;font-size:13px;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.show{opacity:1}
+</style>
+</head>
+<body>
+<div class="hero">
+  <div class="brand"><img src="logo.png" alt="Cardiac Devices – Pacemaker &amp; ICD Clinic"></div>
+  <h1>CIED MRI Check</h1>
+</div>
+
+<div class="wrap">
+  <div class="card">
+    <h2><span class="num">1</span>Paste device information</h2>
+    <div class="pane" id="pane-paste">
+      <textarea id="pasteText" placeholder="Paste interrogation report, clinic note or device card…"></textarea>
+      <div class="row">
+        <button class="btn" id="btnParse">Read text</button>
+        <button class="btn secondary" id="btnSample">Example</button>
+        <label class="hint" id="aiTextWrap" hidden><input type="checkbox" id="useAiText" checked> Use AI</label>
+      </div>
+      <div class="status" id="pasteStatus"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2><span class="num">2</span>Components</h2>
+    <div id="compWrap"></div>
+    <div class="row" id="compAdd">
+      <button class="btn small green" id="addLead2">+ Lead</button>
+      <button class="btn small secondary" id="addGen2">+ Generator</button>
+      <button class="link" id="clearAll">Clear</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2><span class="num">3</span>Patient &amp; scan</h2>
+    <div class="q"><span class="qlab">Device type</span>
+      <select id="qType" class="hidden-sel" data-chips>
+        <option value="auto">Auto-detect</option><option value="pm">Pacemaker</option><option value="crtp">CRT-P</option><option value="leadless">Leadless</option><option value="icd">ICD / CRT-D</option><option value="sicd">S-ICD</option><option value="ilr">Loop recorder</option><option value="pap">PA monitor</option>
+      </select><div class="hint" id="typeHint" style="margin-top:4px"></div></div>
+    <div class="q"><span class="qlab">Pacemaker dependent<span class="from" id="depFrom"></span></span>
+      <select id="qDep" class="hidden-sel" data-chips><option value="unknown">Unknown</option><option value="no">No</option><option value="yes">Yes</option></select></div>
+    <div class="q"><span class="qlab">Scanner</span>
+      <select id="qField" class="hidden-sel" data-chips><option value="1.5">1.5 T</option><option value="3">3 T</option><option value="gt3">&gt; 3 T</option></select></div>
+    <div class="q"><span class="qlab">Scan region</span>
+      <select id="qRegion" class="hidden-sel" data-chips><option value="other">Non-chest</option><option value="cardiac">Cardiac</option><option value="chest">Other chest</option></select></div>
+    <div class="q"><span class="qlab">Generator site</span>
+      <select id="qSide" class="hidden-sel" data-chips><option value="left">Left pectoral</option><option value="right">Right pectoral</option><option value="other">Other</option></select></div>
+    <div class="q"><span class="qlab">Latest implant / revision<span class="from" id="implFrom"></span></span>
+      <input type="date" id="qImplant"> <span class="hint" id="implHint"></span></div>
+    <div class="q"><span class="qlab">Findings (X-ray / notes)</span>
+      <div class="chips">
+        <input type="checkbox" class="hidden-cb" id="cFract"><button class="chip flag bad" data-cb="cFract">Fractured lead</button>
+        <input type="checkbox" class="hidden-cb" id="cExt"><button class="chip flag bad" data-cb="cExt">Extender / adaptor</button>
+        <input type="checkbox" class="hidden-cb" id="cAband"><button class="chip flag" data-cb="cAband">Abandoned lead</button>
+        <input type="checkbox" class="hidden-cb" id="cEpi"><button class="chip flag" data-cb="cEpi">Epicardial lead</button>
+        <input type="checkbox" class="hidden-cb" id="cEri"><button class="chip flag" data-cb="cEri">ERI / abnormal values</button>
+      </div></div>
+  </div>
+
+  <button class="cta" id="btnCheck">Is my device compatible?</button>
+
+  <div class="card" id="resultCard" hidden>
+    <div id="result"></div>
+    <div class="res-actions"><button class="btn secondary small" id="btnCopy" disabled>Copy summary</button></div>
+  </div>
+
+  <footer>
+    Decision support only. Confirm with the manufacturer and device team.<br>
+    <a href="https://www.medtronic.com/en-us/healthcare-professionals/mri-resources.html" target="_blank" rel="noopener">Medtronic</a> ·
+    <a href="https://www.cardiovascular.abbott/us/en/hcp/mri-ready.html" target="_blank" rel="noopener">Abbott</a> ·
+    <a href="https://www.bostonscientific.com/imageready/en-US/model-lookup.html" target="_blank" rel="noopener">Boston Scientific</a> ·
+    <a href="https://www.promricheck.com" target="_blank" rel="noopener">Biotronik</a> ·
+    <a href="https://www.crm.microport.com/automri/en/cardiologist/tool" target="_blank" rel="noopener">MicroPort</a><br>
+    Paterson DI et al. Can J Cardiol 2021;37:835–847
+  </footer>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/*ENGINE_START*/
+// ---------- Device database ----------
+// mri: 'conditional' | 'nonconditional' | 'ambiguous' (family has both MRI and non-MRI models)
+// fs: max field strength for which the generator family is labelled (verify per lead combination)
+const DB = [
+  // ---- Medtronic generators ----
+  {mfr:'Medtronic',kind:'gen',type:'pm',name:'Revo MRI SureScan',codes:['RVDR01'],mri:'conditional',fs:'1.5',note:'Early SureScan system: 1.5 T only, with scan-region (isocentre) restrictions. Check the labelling.'},
+  {mfr:'Medtronic',kind:'gen',type:'pm',name:'Advisa MRI SureScan',codes:['A2DR01','A3DR01','A3SR01','A2SR01'],mri:'conditional',fs:'1.5/3',note:'3 T approval depends on lead combination and region. Check SureScan labelling.'},
+  {mfr:'Medtronic',kind:'gen',type:'pm',name:'Ensura MRI SureScan',codes:['EN1DR01','EN1SR01'],mri:'conditional',fs:'1.5/3'},
+  {mfr:'Medtronic',kind:'gen',type:'pm',name:'EnRhythm MRI SureScan',codes:['EMDR01'],mri:'conditional',fs:'1.5'},
+  {mfr:'Medtronic',kind:'gen',type:'pm',name:'Attesta MRI SureScan',codes:['ATDR01','ATDRL1','ATDRS1','ATSR01'],mri:'conditional',fs:'1.5/3'},
+  {mfr:'Medtronic',kind:'gen',type:'pm',name:'Sphera MRI SureScan',codes:['SPDR01','SPDRL1','SPSR01'],mri:'conditional',fs:'1.5/3'},
+  {mfr:'Medtronic',kind:'gen',type:'pm',name:'Astra MRI SureScan',codes:['X1DR01','X2DR01','X3DR01','X1SR01','X2SR01','X3SR01'],mri:'conditional',fs:'1.5/3'},
+  {mfr:'Medtronic',kind:'gen',type:'pm',name:'Azure MRI SureScan',codes:['W1DR01','W2DR01','W3DR01','W1SR01','W2SR01','W3SR01'],mri:'conditional',fs:'1.5/3'},
+  {mfr:'Medtronic',kind:'gen',type:'crtp',name:'Percepta CRT-P MRI SureScan',codes:['W1TR01','W1TR04','W4TR01','W4TR04'],mri:'conditional',fs:'1.5/3'},
+  {mfr:'Medtronic',kind:'gen',type:'crtp',name:'Serena CRT-P MRI SureScan',codes:['W1TR02','W1TR05','W4TR02','W4TR05'],mri:'conditional',fs:'1.5/3'},
+  {mfr:'Medtronic',kind:'gen',type:'crtp',name:'Solara CRT-P MRI SureScan',codes:['W1TR03','W1TR06','W4TR03','W4TR06'],mri:'conditional',fs:'1.5/3'},
+  {mfr:'Medtronic',kind:'gen',type:'leadless',name:'Micra (VR / AV / VR2 / AV2)',codes:['MC1VR01','MC2VR01','MC1AVR1','MC2AVR1'],mri:'conditional',fs:'1.5/3'},
+  {mfr:'Medtronic',kind:'gen',type:'pm',name:'Adapta',codes:['ADDR01','ADDR03','ADDR06','ADDRL1','ADDRS1','ADSR01','ADSR03','ADSR06','ADVDD01','ADD01'],mri:'nonconditional'},
+  {mfr:'Medtronic',kind:'gen',type:'pm',name:'Versa',codes:['VEDR01'],mri:'nonconditional'},
+  {mfr:'Medtronic',kind:'gen',type:'pm',name:'Sensia',codes:['SEDR01','SEDRL1','SESR01','SES01','SED01'],mri:'nonconditional'},
+  {mfr:'Medtronic',kind:'gen',type:'pm',name:'Relia',codes:['RED01','REDR01','RES01','RESR01','REVDD01'],mri:'nonconditional'},
+  {mfr:'Medtronic',kind:'gen',type:'pm',name:'EnRhythm (non-MRI)',codes:['P1501DR'],mri:'nonconditional'},
+  {mfr:'Medtronic',kind:'gen',type:'pm',name:'Kappa / Sigma / EnPulse',codes:[],names:['KAPPA','SIGMA','ENPULSE'],mri:'nonconditional'},
+  {mfr:'Medtronic',kind:'gen',type:'crtp',name:'Consulta / Syncra CRT-P',codes:['C4TR01','C2TR01'],names:['CONSULTA','SYNCRA'],mri:'nonconditional'},
+
+  // ---- Abbott / St. Jude Medical generators ----
+  {mfr:'Abbott',kind:'gen',type:'pm',name:'Assurity MRI',codes:['PM1272','PM2272'],mri:'conditional',fs:'1.5/3',note:'3 T full body with Tendril STS, IsoFlex Optim or UltiPace leads. Check the Abbott combination table.'},
+  {mfr:'Abbott',kind:'gen',type:'pm',name:'Endurity MRI',codes:['PM1172','PM2172'],mri:'conditional',fs:'1.5'},
+  {mfr:'Abbott',kind:'gen',type:'pm',name:'Endurity',codes:['PM1162','PM2162'],mri:'conditional',fs:'1.5',note:'Abbott lists this as MR Conditional (Scan Set B) only with Tendril MRI LPA1200M leads.'},
+  {mfr:'Abbott',kind:'gen',type:'pm',name:'Accent MRI / Accent ST MRI',codes:['PM1124','PM1224','PM2124','PM2224','PM1226','PM2226'],mri:'conditional',fs:'1.5'},
+  {mfr:'Abbott',kind:'gen',type:'pm',name:'Assurity (non-MRI)',codes:['PM1240','PM2240'],mri:'nonconditional'},
+  {mfr:'Abbott',kind:'gen',type:'pm',name:'Accent (non-MRI)',codes:['PM1210','PM2210','PM2212','PM1110','PM2110','PM2112'],mri:'nonconditional'},
+  {mfr:'Abbott',kind:'gen',type:'pm',name:'Zephyr / Victory / Identity / Verity / Integrity / Affinity / Sustain',codes:[],names:['ZEPHYR','VICTORY','IDENTITY','VERITY','INTEGRITY','AFFINITY','SUSTAIN'],mri:'nonconditional'},
+  {mfr:'Abbott',kind:'gen',type:'crtp',name:'Anthem / Allure CRT-P (non-MRI)',codes:[],names:['ANTHEM'],mri:'nonconditional'},
+  {mfr:'Abbott',kind:'gen',type:'leadless',name:'AVEIR leadless pacemaker',codes:['LSP112V','LSP201A','LSP202V'],names:['AVEIR'],mri:'conditional',fs:'1.5/3'},
+
+  // ---- Boston Scientific generators ----
+  {mfr:'Boston Scientific',kind:'gen',type:'pm',name:'Accolade MRI',codes:['L310','L311','L331'],mri:'conditional',fs:'1.5/3'},
+  {mfr:'Boston Scientific',kind:'gen',type:'pm',name:'Essentio MRI',codes:['L110','L111','L131'],mri:'conditional',fs:'1.5/3'},
+  {mfr:'Boston Scientific',kind:'gen',type:'pm',name:'Proponent MRI',codes:['L210','L211','L231'],mri:'conditional',fs:'1.5/3'},
+  {mfr:'Boston Scientific',kind:'gen',type:'pm',name:'Vitalio MRI',codes:['K275','K277','J275','J276','J277'],mri:'conditional',fs:'1.5'},
+  {mfr:'Boston Scientific',kind:'gen',type:'pm',name:'Ingenio MRI',codes:['J175','J176','J177'],mri:'conditional',fs:'1.5'},
+  {mfr:'Boston Scientific',kind:'gen',type:'pm',name:'Advantio MRI',codes:['J065','J066','J067'],mri:'conditional',fs:'1.5'},
+  {mfr:'Boston Scientific',kind:'gen',type:'pm',name:'Formio MRI',codes:['J279'],mri:'conditional',fs:'1.5'},
+  {mfr:'Boston Scientific',kind:'gen',type:'crtp',name:'Visionist X4 CRT-P',codes:['U228'],mri:'conditional',fs:'1.5/3'},
+  {mfr:'Boston Scientific',kind:'gen',type:'crtp',name:'Valitude X4 CRT-P',codes:['U128'],mri:'conditional',fs:'1.5/3'},
+  {mfr:'Boston Scientific',kind:'gen',type:'pm',name:'Accolade (non-MRI)',codes:['L300','L301','L321'],mri:'nonconditional'},
+  {mfr:'Boston Scientific',kind:'gen',type:'pm',name:'Essentio (non-MRI)',codes:['L100','L101','L121'],mri:'nonconditional'},
+  {mfr:'Boston Scientific',kind:'gen',type:'pm',name:'Proponent (non-MRI)',codes:['L200','L201','L209','L221'],mri:'nonconditional'},
+  {mfr:'Boston Scientific',kind:'gen',type:'pm',name:'Altrua 2',codes:['S701','S702','S722'],mri:'nonconditional'},
+  {mfr:'Boston Scientific',kind:'gen',type:'pm',name:'Altrua / Insignia',codes:[],names:['INSIGNIA'],mri:'nonconditional'},
+  {mfr:'Boston Scientific',kind:'gen',type:'icd',name:'EMBLEM MRI S-ICD',codes:['A219','A209'],mri:'conditional',fs:'1.5',devType:'sicd'},
+
+  // ---- Biotronik generators ----
+  {mfr:'Biotronik',kind:'gen',type:'pm',name:'Edora 8 ProMRI',codes:[],names:['EDORA'],mri:'conditional',fs:'1.5/3'},
+  {mfr:'Biotronik',kind:'gen',type:'pm',name:'Evity 8 ProMRI',codes:[],names:['EVITY'],mri:'conditional',fs:'1.5/3'},
+  {mfr:'Biotronik',kind:'gen',type:'pm',name:'Enitra 8 ProMRI',codes:[],names:['ENITRA'],mri:'conditional',fs:'1.5/3'},
+  {mfr:'Biotronik',kind:'gen',type:'pm',name:'Amvia Edge / Sky',codes:[],names:['AMVIA'],mri:'conditional',fs:'1.5/3'},
+  {mfr:'Biotronik',kind:'gen',type:'pm',name:'Eluna / Epyra / Etrinsa ProMRI',codes:[],names:['ELUNA','EPYRA','ETRINSA'],mri:'conditional',fs:'1.5/3',note:'Field strength and scan zone depend on model and leads. Check ProMRIcheck.'},
+  {mfr:'Biotronik',kind:'gen',type:'pm',name:'Evia / Entovis ProMRI',codes:[],names:['EVIA','ENTOVIS'],mri:'conditional',fs:'1.5',note:'1.5 T with scan-zone (isocentre) restrictions, and only with Safio S / Setrox S leads.'},
+  {mfr:'Biotronik',kind:'gen',type:'pm',name:'Philos / Cylos / Talos / Axios / Effecta',codes:[],names:['PHILOS','CYLOS','TALOS','AXIOS','EFFECTA'],mri:'nonconditional'},
+
+  // ---- MicroPort / Sorin / LivaNova generators ----
+  {mfr:'MicroPort',kind:'gen',type:'pm',name:'KORA 250',codes:[],names:['KORA 250','KORA250'],mri:'conditional',fs:'1.5/3',note:'AutoMRI mode. Check the MicroPort AutoMRI tool for lead combinations.'},
+  {mfr:'MicroPort',kind:'gen',type:'pm',name:'KORA 100',codes:[],names:['KORA 100','KORA100'],mri:'conditional',fs:'1.5',note:'Out-of-chest (exclusion zone) 1.5 T labelling. Check the MicroPort AutoMRI tool.'},
+  {mfr:'MicroPort',kind:'gen',type:'pm',name:'ALIZEA / BOREA / ENO / TEO / OTO',codes:[],names:['ALIZEA','BOREA','ENO','TEO','OTO'],mri:'conditional',fs:'1.5/3',note:'AutoMRI capable. Check the MicroPort AutoMRI tool for the exact combination.'},
+  {mfr:'MicroPort',kind:'gen',type:'pm',name:'Reply / Esprit / Symphony (Sorin)',codes:[],names:['REPLY','ESPRIT','SYMPHONY'],mri:'nonconditional'},
+
+  // ---- Leads ----
+  {mfr:'Medtronic',kind:'lead',name:'CapSureFix Novus MRI SureScan',codes:['5076'],mri:'conditional',note:'Conditional as part of a SureScan system.'},
+  {mfr:'Medtronic',kind:'lead',name:'CapSureFix MRI SureScan',codes:['5086','5086MRI'],mri:'conditional'},
+  {mfr:'Medtronic',kind:'lead',name:'CapSure Sense MRI SureScan',codes:['4074'],mri:'conditional'},
+  {mfr:'Medtronic',kind:'lead',name:'CapSureFix Novus MRI SureScan (4076)',codes:['4076'],mri:'conditional'},
+  {mfr:'Medtronic',kind:'lead',name:'SelectSecure MRI SureScan',codes:['3830'],mri:'conditional'},
+  {mfr:'Medtronic',kind:'lead',name:'Attain Performa / Stability Quad MRI SureScan (LV)',codes:['4298','4398','4598','4798'],mri:'conditional'},
+  {mfr:'Abbott',kind:'lead',name:'Tendril MRI',codes:['LPA1200M'],mri:'conditional'},
+  {mfr:'Abbott',kind:'lead',name:'Tendril STS',codes:['2088TC'],mri:'conditional'},
+  {mfr:'Abbott',kind:'lead',name:'IsoFlex Optim',codes:['1944','1948'],mri:'conditional'},
+  {mfr:'Abbott',kind:'lead',name:'UltiPace',codes:['LPA1231'],mri:'conditional'},
+  {mfr:'Abbott',kind:'lead',name:'Quartet (LV)',codes:['1458Q'],mri:'conditional'},
+  {mfr:'Boston Scientific',kind:'lead',name:'Ingevity MRI',codes:['7731','7732','7735','7736','7740','7741','7742'],mri:'conditional'},
+  {mfr:'Boston Scientific',kind:'lead',name:'Fineline II Sterox / EZ',codes:['4456','4457','4458','4459','4469','4470','4471','4472','4473','4474','4479','4480'],mri:'conditional',note:'Conditional only with ImageReady generators. Check valid combinations.'},
+  {mfr:'Boston Scientific',kind:'lead',name:'Acuity X4 (LV)',codes:['4671','4672','4674','4675'],mri:'conditional'},
+  {mfr:'Biotronik',kind:'lead',name:'Solia S ProMRI',codes:[],names:['SOLIA S','SOLIA'],mri:'conditional'},
+  {mfr:'Biotronik',kind:'lead',name:'Safio S ProMRI',codes:[],names:['SAFIO S','SAFIO'],mri:'conditional'},
+  {mfr:'Biotronik',kind:'lead',name:'Setrox S ProMRI',codes:[],names:['SETROX S','SETROX'],mri:'conditional'},
+  {mfr:'Biotronik',kind:'lead',name:'Siello S ProMRI',codes:[],names:['SIELLO'],mri:'conditional'},
+  {mfr:'Biotronik',kind:'lead',name:'Sentus / Corox ProMRI (LV)',codes:[],names:['SENTUS','COROX'],mri:'conditional'},
+  {mfr:'MicroPort',kind:'lead',name:'Beflex',codes:['RF45D','RF46D'],names:['BEFLEX'],mri:'conditional'},
+  {mfr:'MicroPort',kind:'lead',name:'Xfine / Vega',codes:[],names:['XFINE','VEGA'],mri:'conditional'},
+];
+
+// Family names that exist in both MRI and non-MRI versions: name alone can't decide
+const AMBIGUOUS = [
+  {mfr:'Boston Scientific',re:/\b(ACCOLADE|ESSENTIO|PROPONENT|INGENIO|ADVANTIO|VITALIO|FORMIO|VISIONIST|VALITUDE)\b/},
+  {mfr:'Abbott',re:/\b(ASSURITY|ENDURITY|ACCENT)\b/},
+  {mfr:'Medtronic',re:/\b(ADVISA|ENRHYTHM)\b/},
+];
+// Conditional family names that need "MRI" next to them to count
+const MRI_NAMED = [
+  {re:/\bACCOLADE\b[^\n]{0,12}\bMRI\b/,code:'L311'},{re:/\bESSENTIO\b[^\n]{0,12}\bMRI\b/,code:'L111'},{re:/\bPROPONENT\b[^\n]{0,12}\bMRI\b/,code:'L211'},
+  {re:/\bINGENIO\b[^\n]{0,8}\bMRI\b/,code:'J176'},{re:/\bADVANTIO\b[^\n]{0,8}\bMRI\b/,code:'J066'},{re:/\bVITALIO\b[^\n]{0,8}\bMRI\b/,code:'J276'},{re:/\bFORMIO\b[^\n]{0,8}\bMRI\b/,code:'J279'},
+  {re:/\bASSURITY\b[^\n]{0,8}\bMRI\b/,code:'PM2272'},{re:/\bENDURITY\b[^\n]{0,8}\bMRI\b/,code:'PM2172'},{re:/\bACCENT\b[^\n]{0,12}\bMRI\b/,code:'PM2124'},
+  {re:/\bADVISA\b[^\n]{0,8}\bMRI\b/,code:'A2DR01'},{re:/\bENRHYTHM\b[^\n]{0,8}\bMRI\b/,code:'EMDR01'},
+  {re:/\bAZURE\b/,code:'W1DR01'},{re:/\bASTRA\b/,code:'X2DR01'},{re:/\bATTESTA\b/,code:'ATDR01'},{re:/\bSPHERA\b/,code:'SPDR01'},{re:/\bENSURA\b/,code:'EN1DR01'},{re:/\bREVO\b/,code:'RVDR01'},
+  {re:/\bPERCEPTA\b/,code:'W4TR01'},{re:/\bSERENA\b/,code:'W4TR02'},{re:/\bSOLARA\b/,code:'W4TR03'},{re:/\bMICRA\b/,code:'MC1VR01'},
+  {re:/\bVISIONIST\b[^\n]{0,6}\bX4\b/,code:'U228'},{re:/\bVALITUDE\b[^\n]{0,6}\bX4\b/,code:'U128'},
+  {re:/\bADAPTA\b/,code:'ADDR01'},{re:/\bVERSA\b/,code:'VEDR01'},{re:/\bSENSIA\b/,code:'SEDR01'},{re:/\bRELIA\b/,code:'RED01'},{re:/\bALTRUA\b/,code:'S702'},
+];
+
+const CODE_INDEX = new Map();
+DB.forEach((e,i)=>e.codes.forEach(c=>CODE_INDEX.set(c.toUpperCase(),i)));
+
+const MFR_RE = [
+  ['Medtronic',/\bMEDTRONIC|\bMDT\b|SURESCAN/],
+  ['Abbott',/\bABBOTT|ST\.?\s?JUDE|\bSJM\b/],
+  ['Boston Scientific',/BOSTON\s*SCI|\bBSC\b|GUIDANT|IMAGEREADY/],
+  ['Biotronik',/BIOTRONIK|PROMRI/],
+  ['MicroPort',/MICROPORT|SORIN|LIVANOVA|ELA MEDICAL/],
+];
+
+function normCode(s){ return String(s||'').toUpperCase().replace(/\s+/g,'').replace(/[^A-Z0-9]/g,''); }
+
+// Find a DB entry for a model number / name string
+function lookup(model,name){
+  const raw = String(model||'').toUpperCase();
+  const n = normCode(model);
+  if(n){
+    if(CODE_INDEX.has(n)) return {entry:DB[CODE_INDEX.get(n)],how:'model'};
+    // strip lead length suffix, e.g. 5076-52 / 5076-52CM / 7741-52
+    const base = raw.split(/[-\/\s]/)[0].replace(/[^A-Z0-9]/g,'');
+    if(CODE_INDEX.has(base)) return {entry:DB[CODE_INDEX.get(base)],how:'model'};
+    if(CODE_INDEX.has(base.replace(/MRI$/,''))) return {entry:DB[CODE_INDEX.get(base.replace(/MRI$/,''))],how:'model'};
+  }
+  const txt = (String(name||'')+' '+raw).toUpperCase();
+  if(txt.trim()){
+    for(const m of MRI_NAMED){ if(m.re.test(txt)) return {entry:DB[CODE_INDEX.get(m.code)],how:'name'}; }
+    for(const a of AMBIGUOUS){ if(a.re.test(txt)) return {entry:{mfr:a.mfr,kind:'gen',name:txt.match(a.re)[1].charAt(0)+txt.match(a.re)[1].slice(1).toLowerCase()+' (MRI version unclear)',mri:'ambiguous',type:'pm',codes:[]},how:'name'}; }
+    for(const e of DB){ if(e.names && e.names.some(nm=>new RegExp('\\b'+nm.replace(/ /g,'\\s*')+'\\b').test(txt))) return {entry:e,how:'name'}; }
+  }
+  return null;
+}
+
+function detectMfr(text){
+  const t=String(text||'').toUpperCase();
+  for(const [m,re] of MFR_RE) if(re.test(t)) return m;
+  return '';
+}
+
+// ---------- Local (no-AI) text extraction ----------
+const DATE_RE = /(\d{4}[-\/.]\d{1,2}[-\/.]\d{1,2}|\d{1,2}[-\/.]\d{1,2}[-\/.]\d{2,4}|[A-Za-z]{3,9}\.?\s+\d{1,2},?\s+\d{4}|\d{1,2}\s+[A-Za-z]{3,9}\.?\s+\d{4})/;
+function parseDate(s){
+  if(!s) return '';
+  s=String(s).trim();
+  let m=s.match(/^(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})$/);
+  if(m) return `${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`;
+  m=s.match(/^(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{2,4})$/);
+  if(m){ let y=m[3].length===2?'20'+m[3]:m[3]; let a=+m[1],b=+m[2]; let mo=a>12?b:a, d=a>12?a:b; return `${y}-${String(mo).padStart(2,'0')}-${String(d).padStart(2,'0')}`; }
+  const t=Date.parse(s.replace(/\./g,''));
+  if(!isNaN(t)){ const d=new Date(t); return d.toISOString().slice(0,10); }
+  return '';
+}
+
+const DEVICE_CTX=/DEVICE|PACEMAKER|PACER|GENERATOR|\bIPG\b|\bCRT|\bICD\b|LEAD|MODEL|\b(DR|SR|VR|HF)(-T)?\b|\bSN\b|SERIAL|MEDTRONIC|ABBOTT|ST\.? ?JUDE|BOSTON|BIOTRONIK|MICROPORT|SORIN|SURESCAN|PROMRI|IMAGEREADY|LEADLESS/;
+function localExtract(text){
+  const out={components:[],dependent:null,implantDate:'',flags:{}};
+  const lines=String(text||'').split(/\r?\n/);
+  const globalMfr=detectMfr(text);
+  const seen=new Set();
+  lines.forEach(line=>{
+    const U=line.toUpperCase();
+    const tokens=U.match(/[A-Z0-9][A-Z0-9-]{2,}/g)||[];
+    const ctx=DEVICE_CTX.test(U);
+    let found=null;
+    for(const tk of tokens){
+      if(/^\d+(-\d+)?$/.test(tk) && !ctx) continue; // bare numbers only count on device/lead lines
+      const r=lookup(tk,'');
+      if(r && r.how==='model'){ found={r,tk}; break; }
+    }
+    if(!found && ctx){ const r=lookup('',U); if(r) found={r,tk:''}; }
+    if(!found) return;
+    const e=found.r.entry;
+    const key=(e.name||'')+'|'+found.tk+'|'+(U.match(/\b(RA|RV|LV|ATRIAL|VENTRICULAR)\b/)||[''])[0];
+    if(seen.has(key) && e.kind==='gen') return;
+    seen.add(key);
+    const sn=(line.match(/(?:serial(?:\s*(?:no\.?|number|#))?|S\/N|\bSN)\s*[:#]?\s*([A-Z0-9][A-Z0-9-]{4,})/i)||[])[1]||'';
+    const dm=line.match(/implant\w*\s*(?:date)?\s*[:\-]?\s*/i) ? (line.slice(line.search(/implant/i)).match(DATE_RE)||[])[1] : '';
+    let pos='';
+    if(/\bRA\b|ATRI/.test(U)) pos='RA'; else if(/\bLV\b|LEFT VENT|CORONARY SINUS|\bCS\b/.test(U)) pos='LV'; else if(/\bRV\b|VENTRIC/.test(U)) pos='RV';
+    out.components.push({
+      role:e.kind==='lead'?'lead':'gen', position:pos, mfr:e.mfr||detectMfr(line)||globalMfr, name:e.name||'',
+      model:found.tk||'', serial:sn, implantDate:parseDate(dm), abandoned:/ABANDON|CAPPED|NOT CONNECTED|EXTRACT/.test(U)
+    });
+    if(dm && e.kind!=='lead' && !out.implantDate) out.implantDate=parseDate(dm);
+  });
+  const T=String(text||'').toUpperCase();
+  if(/NOT\s+(PACEMAKER|PACER)\s*-?\s*DEPENDENT|NON[-\s]?DEPENDENT|DEPENDENT\s*[:=]\s*NO/.test(T)) out.dependent='no';
+  else if(/(PACEMAKER|PACER)\s*-?\s*DEPENDENT|DEPENDENT\s*[:=]\s*YES|NO\s+(UNDERLYING|ESCAPE|INTRINSIC)\s+RHYTHM|ASYSTOL|NO ESCAPE/.test(T)) out.dependent='yes';
+  if(/ABANDON|CAPPED LEAD/.test(T)) out.flags.abandoned=true;
+  if(/EPICARDIAL/.test(T)) out.flags.epicardial=true;
+  if(/FRACTUR/.test(T)) out.flags.fractured=true;
+  if(/EXTENDER|ADAPTOR|ADAPTER/.test(T)) out.flags.extender=true;
+  if(/\bERI\b|\bRRT\b|\bEOS\b|ELECTIVE REPLACEMENT/.test(T)) out.flags.eri=true;
+  if(!out.implantDate){ const m=String(text).match(/implant\w*\s*(?:date)?\s*[:\-]?\s*([^\n]{0,30})/i); if(m){ const d=(m[1].match(DATE_RE)||[])[1]; if(d) out.implantDate=parseDate(d);} }
+  return out;
+}
+
+// ---------- Rules engine (CCS/CanSCMR/CHRS 2021) ----------
+const MODE_NAME = {
+  'Medtronic':'SureScan MRI mode','Abbott':'MRI Settings (MRI Ready; MRI Activator where supported)',
+  'Boston Scientific':'MRI Protection Mode (ImageReady)','Biotronik':'MRI program / MRI AutoDetect (ProMRI)','MicroPort':'AutoMRI mode'
+};
+
+function weeksSince(d,today){
+  if(!d) return null; const t=Date.parse(d); if(isNaN(t)) return null;
+  return ((today||Date.now())-t)/(7*864e5);
+}
+
+function evaluate(comps,p,today){
+  const R={level:'unk',title:'',summary:'',system:'',items:[],program:[],supervise:[],field:'',type:'',recs:new Set(),components:[]};
+  const add=(lvl,text,rec)=>{R.items.push({lvl,text,rec}); if(rec) String(rec).split(',').forEach(x=>R.recs.add(x.trim()));};
+  const resolved=comps.map(c=>{ const r=lookup(c.model,c.name); return {...c,db:r?r.entry:null,how:r?r.how:null}; });
+  R.components=resolved;
+  const gens=resolved.filter(c=>c.role==='gen');
+  const gen=gens[0]||null;
+  let type=p.deviceType;
+  if(type==='auto'){ type = gen&&gen.db ? (gen.db.devType||gen.db.type||'pm') : (gens.length?'pm':''); }
+  R.type=type;
+  if(!gen && !['ilr','pap'].includes(type)){
+    R.level='unk'; R.title='Generator not identified'; R.summary='Add the generator (device) model to assess the system.'; return R;
+  }
+  const dep=p.dependent; // yes/no/unknown
+  const depEff = dep==='no' ? 'no' : 'yes';
+  const field=p.field;
+
+  // Absolute contraindications
+  let stop=false;
+  if(p.fractured){ stop=true; add('stop','Fractured lead identified. Patients with fractured leads should not undergo MRI.','3'); }
+  if(p.extender){ stop=true; add('stop','Lead extender or adaptor present. Patients with lead extenders should not undergo MRI.','3'); }
+  if(field==='gt3'){ stop=true; add('stop','No CIED has been tested or approved at field strengths above 3 T. Use a 1.5 T scanner (or 3 T only if the system is labelled for it).','Def B'); }
+
+  // System classification
+  const needsLeads = ['pm','crtp','icd'].includes(type);
+  const activeLeads = resolved.filter(c=>c.role==='lead' && !c.abandoned);
+  const abandonedLeads = resolved.filter(c=>c.role==='lead' && c.abandoned);
+  const hasAband = p.abandoned || abandonedLeads.length>0;
+  const genStatus = gen ? (gen.db ? gen.db.mri : 'unknown') : 'n/a';
+  const leadStat = activeLeads.map(l=>l.db?l.db.mri:'unknown');
+  const mfrs = new Set(resolved.filter(c=>!c.abandoned).map(c=>(c.db&&c.db.mfr)||c.mfr).filter(Boolean));
+  const mixed = mfrs.size>1;
+  const anyNonLead = leadStat.includes('nonconditional');
+  const anyUnkLead = leadStat.includes('unknown') || leadStat.includes('ambiguous');
+  const leadsMissing = needsLeads && activeLeads.length===0;
+
+  let cls; // conditional | nonconditional | unconfirmed
+  const reasons=[];
+  if(genStatus==='nonconditional'){ cls='nonconditional'; reasons.push('the generator is not MRI-conditional'); }
+  if(anyNonLead){ cls='nonconditional'; reasons.push('a lead is not MRI-conditional'); }
+  if(mixed){ cls='nonconditional'; reasons.push('components are from different manufacturers ('+[...mfrs].join(', ')+')'); }
+  if(hasAband){ cls='nonconditional'; reasons.push('there is an abandoned lead'); }
+  if(p.epicardial){ cls='nonconditional'; reasons.push('there is an epicardial lead'); }
+  if(!cls){
+    if(genStatus==='conditional' && !leadsMissing && !anyUnkLead) cls='conditional';
+    else {
+      cls='unconfirmed';
+      if(genStatus==='unknown') reasons.push('the generator model was not recognised');
+      if(genStatus==='ambiguous') reasons.push('this family has MRI and non-MRI versions, so the exact model number is needed');
+      if(leadsMissing) reasons.push('lead models have not been entered');
+      if(anyUnkLead) reasons.push('one or more lead models were not recognised as MRI-conditional');
+    }
+  }
+  if(['ilr','pap','leadless','sicd'].includes(type) && !cls) cls='unconfirmed';
+  if(['ilr','pap'].includes(type) && !gen) cls='unconfirmed';
+  R.system=cls;
+
+  const genFs = gen&&gen.db&&gen.db.fs ? gen.db.fs : '';
+  const fsOK3 = genFs.includes('3');
+  const mfr = gen ? ((gen.db&&gen.db.mfr)||gen.mfr) : '';
+  const modeName = MODE_NAME[mfr]||"manufacturer's MRI mode";
+
+  // Field-strength guidance
+  let fieldTxt;
+  if(cls==='conditional'){
+    if(field==='3' && !fsOK3){ add('warn','This generator is labelled for 1.5 T only. Scan at 1.5 T.','4,Def B'); fieldTxt='1.5 T (generator not labelled for 3 T)'; }
+    else fieldTxt = fsOK3 ? '1.5 T preferred when possible; 3 T only if the full generator and lead combination is labelled for 3 T' : '1.5 T';
+  } else {
+    fieldTxt = (type==='ilr') ? 'Within the manufacturer’s specification' : '1.5 T';
+    if(field==='3' && !['ilr'].includes(type)) add('warn','Systems that are not MRI-conditional or not confirmed should be scanned at 1.5 T. Change the booking from 3 T.','7,8,9');
+  }
+  if(type==='leadless') fieldTxt='Not above the manufacturer’s specification'+(genFs?` (labelled ${genFs.replace('/',' / ')} T)`:'');
+  R.field=fieldTxt;
+
+  // Relative contraindications (Fig 1) and other cautions
+  const latest = p.implantDate || '';
+  const wk = weeksSince(latest,today);
+  if(wk!==null && wk<6){ add('warn',`Last implant or revision was ${Math.max(0,Math.floor(wk))} week(s) ago (under 6 weeks). This is a relative contraindication. The actual risk is likely low, so MRI can still be considered when clinical need is high and no alternative imaging is available.`,'1,Fig 1'); }
+  if(hasAband) add('warn','Abandoned transvenous lead. MRI might be considered when clinical need is strong and outweighs the potential risk, at 1.5 T and after informed consent. The system is no longer MRI-conditional.','3');
+  if(p.epicardial) add('warn','Epicardial lead. MRI might be considered when clinical need is strong, at 1.5 T and after informed consent. The risk is likely lower for temporary-pacing epicardial wires after cardiac surgery.','3');
+  if(p.region==='chest'||p.region==='cardiac') add('warn','The device generator overlaps the scan region (relative contraindication). Expect susceptibility artifact. Confirm the system’s labelling allows chest scanning (some early systems have exclusion zones).','Fig 1');
+  if(p.region==='cardiac' && p.side==='left') add('info','Left pectoral device and cardiac MRI: use fast gradient echo sequences for cine imaging and wide-band sequences for late gadolinium enhancement to reduce artifact.','2');
+  if(p.eri) add('warn','Battery near ERI/EOS or abnormal lead parameters. Discuss with the heart rhythm device team before scanning. Some manufacturers do not permit MRI mode at ERI.','');
+  if(dep==='unknown' && !['ilr','pap'].includes(type)) add('info','Pacemaker dependency is unknown, so the plan below assumes the patient is dependent. Confirm at the pre-scan interrogation.','8');
+  if(gen&&gen.db&&gen.db.note) add('info',gen.db.note,'');
+  [...new Set(resolved.filter(c=>c.role==='lead'&&c.db&&c.db.note).map(l=>`${l.db.name}: ${l.db.note}`))].forEach(t=>add('info',t,''));
+  if(gen && gen.how==='name') add('info','The generator was matched by name only. Confirm the exact model number, because some families include non-MRI versions.','');
+  if(cls!=='conditional' && reasons.length) add(cls==='nonconditional'?'warn':'info','Not classified as MRI-conditional because '+reasons.join('; ')+'. Per CCS, a system is MRI-conditional only if every component is MRI-conditional and from the same manufacturer, and the scan is within the labelled field strength.','Def A');
+
+  // Programming & supervision by device type
+  const P=R.program, S=R.supervise;
+  const baseMon='Monitored setting: MRI-compatible continuous ECG, non-invasive BP and pulse oximetry.';
+  if(type==='pm'||type==='crtp'){
+    if(cls==='conditional'){
+      R.recs.add('4');
+      P.push(`Pre-scan: interrogate, then program the ${modeName}.`);
+      P.push(depEff==='yes' ? 'Pacemaker dependent: choose an asynchronous pacing mode (DOO, or VOO/AOO as appropriate) at a rate above the intrinsic rate.' : 'Not dependent: a non-pacing / sense-only MRI mode (e.g. ODO/OVO, or OFF/OOO where the manufacturer offers it) is usually used. Asynchronous pacing is an alternative if needed.');
+      if(type==='crtp') P.push('CRT-P: keep biventricular pacing in the MRI mode if the patient depends on pacing.');
+      P.push('Post-scan: interrogate and restore pre-scan settings.');
+      S.push(baseMon,'Access to the heart rhythm device team.');
+      if(depEff==='yes') S.push('Cardiac arrest cart with transcutaneous pacing/defibrillator pads readily available.');
+    } else if(depEff==='no'){
+      R.recs.add('7');
+      P.push('Pre-scan: interrogate, then program a sense-only (non-pacing) mode: OAO, OVO or ODO.');
+      P.push('Turn off rate response and other enhanced features as per local protocol.');
+      P.push('Post-scan: interrogate (thresholds, sensing, impedance, battery) and reprogram to pre-scan settings.');
+      S.push(baseMon,'Access to the heart rhythm device team.');
+    } else {
+      R.recs.add('8');
+      P.push('Pre-scan: interrogate, then program an asynchronous pacing mode: AOO, VOO or DOO, at a rate above the intrinsic rate.');
+      P.push('Turn off rate response and other enhanced features as per local protocol.');
+      P.push('Post-scan: interrogate (thresholds, sensing, impedance, battery) and reprogram to pre-scan settings.');
+      S.push(baseMon,'Supervision by a health care practitioner trained in ACLS.','Access to the code team and heart rhythm device team.','Cardiac arrest cart with transcutaneous pacing/defibrillator pads readily available.');
+    }
+  } else if(type==='leadless'){
+    R.recs.add('6');
+    P.push(`Pre-scan: program the leadless pacemaker's MRI mode${mfr?` (${modeName})`:''}. Use asynchronous VOO if dependent, otherwise an MRI mode such as OVO/OFF.`);
+    P.push('Post-scan: reprogram to pre-scan settings.');
+    S.push(baseMon,'Access to the heart rhythm device team.');
+  } else if(type==='icd'){
+    R.recs.add(cls==='conditional'?'4':'9');
+    P.push('Pre-scan: turn off tachycardia detection and therapies.');
+    P.push(depEff==='yes' ? 'Pacemaker dependent: program asynchronous pacing (DOO/VOO) at a rate above the intrinsic rate.' : 'Not dependent: program a non-pacing / sense-only mode.');
+    if(cls==='conditional') P.push(`Use the ${modeName}, which combines these settings.`);
+    P.push('Post-scan: interrogate, re-enable tachycardia therapies and restore pre-scan settings before the patient leaves monitoring.');
+    S.push(baseMon,'Supervision by a health care practitioner trained in ACLS.','Access to the code team and heart rhythm device team.','External defibrillator / arrest cart with pads readily available.');
+  } else if(type==='sicd'){
+    R.recs.add('5');
+    P.push('Pre-scan: turn off tachycardia therapies (MRI Protection Mode).');
+    P.push('Post-scan: interrogate and reprogram to pre-scan settings.');
+    S.push(baseMon,'Supervision by a health care practitioner trained in ACLS.','Access to the code team and heart rhythm device team.','External defibrillator with pads readily available.');
+    fieldTxt='1.5 T'; R.field=fieldTxt;
+  } else if(type==='ilr'){
+    R.recs.add('10');
+    P.push('Download stored data before the scan, and clear unwanted (artifact) data after the scan.');
+    S.push('Standard monitoring and access to the device team is good practice. No special requirements.');
+  } else if(type==='pap'){
+    R.recs.add('11');
+    P.push('No programming. The device is a sensor only.');
+    S.push('Scan at 1.5 T when possible, in a monitored setting.');
+    R.field='1.5 T when possible';
+  }
+
+  // Verdict
+  R.recs.add('1');
+  if(stop){ R.program.length=0; R.supervise.length=0; R.level='stop'; R.title='MRI not recommended'; R.summary='An absolute contraindication or an unsupported field strength was identified (see below). Discuss alternative imaging.'; }
+  else if(['ilr','pap'].includes(type)){ R.level='ok'; R.title= type==='ilr'?'Loop recorder: MRI can proceed':'PA pressure monitor: MRI can proceed'; R.summary= type==='ilr'?'Scan within the manufacturer’s field-strength specification. Download data before the scan.':'Prefer 1.5 T in a monitored setting.'; }
+  else if(cls==='conditional'){ R.level='ok'; R.title='MRI-conditional system'; R.summary=`All identified components are MRI-conditional and from ${mfr||'the same manufacturer'}. MRI can proceed under the manufacturer’s conditions and your standardized protocol.`; }
+  else if(cls==='nonconditional'){ R.level='warn'; R.title='Not MRI-conditional: MRI possible with precautions'; R.summary='Under the CCS statement, MRI can still be performed at 1.5 T with a standardized protocol, the device programming below and appropriate supervision, when the clinical need justifies it.'; }
+  else { R.level='unk'; R.title='MRI-conditional status not confirmed'; R.summary='Manage as MRI-nonconditional (below) until the full system is confirmed with the manufacturer’s MRI lookup.'; }
+  if(!stop && R.items.some(i=>i.lvl==='warn') && R.level==='ok') R.summary+=' Review the cautions below.';
+  return R;
+}
+/*ENGINE_END*/
+</script>
+
+<script>
+// ---------- UI ----------
+const $=s=>document.querySelector(s);
+const state={comps:[],idc:0,dependentFrom:'',images:[]};
+let sample=null, sampleImages=false;
+
+function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(toast._t);toast._t=setTimeout(()=>t.classList.remove('show'),1800);}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+function newComp(role,o={}){return {id:++state.idc,role,position:o.position||'',mfr:o.mfr||'',name:o.name||'',model:o.model||'',serial:o.serial||'',implantDate:o.implantDate||'',abandoned:!!o.abandoned};}
+
+function statusPill(c){
+  const r=lookup(c.model,c.name);
+  if(!c.model && !c.name) return '<span class="pill unk">Enter model</span>';
+  if(!r) return '<span class="pill unk">Not in list</span>';
+  const m=r.entry.mri;
+  if(m==='conditional') return '<span class="pill ok">MR-conditional</span>';
+  if(m==='nonconditional') return '<span class="pill warn">Nonconditional</span>';
+  return '<span class="pill unk">Model no. needed</span>';
+}
+function matchLine(c){
+  const r=lookup(c.model,c.name);
+  if(!r) return (c.model||c.name)?'No match in built-in list. Check the manufacturer lookup.':'';
+  const e=r.entry;
+  return `${esc(e.mfr)} · ${esc(e.name)}${e.fs?` · labelled ${esc(e.fs.replace('/',' / '))} T`:''}${r.how==='name'?' · matched by name':''}`;
+}
+
+function renderComps(){
+  const w=$('#compWrap');
+  if(!state.comps.length){w.innerHTML='<div class="empty">Nothing added yet</div>';return;}
+  w.innerHTML=state.comps.map(c=>`
+    <div class="comp" data-id="${c.id}">
+      <div class="comp-top">
+        <div class="chips">
+          <button class="chip${c.role==='gen'?' on':''}" data-set="role" data-v="gen">Generator</button>
+          <button class="chip${c.role==='lead'?' on':''}" data-set="role" data-v="lead">Lead</button>
+          ${c.role==='lead'?['RA','RV','LV'].map(p=>`<button class="chip${c.position===p?' on':''}" data-set="position" data-v="${p}">${p}</button>`).join('')+`<button class="chip flag${c.abandoned?' on':''}" data-set="abandoned">Abandoned</button>`:''}
+        </div>
+        <span class="st">${statusPill(c)}</span>
+        <button class="x" data-del="${c.id}" title="Remove">×</button>
+      </div>
+      <div class="comp-grid">
+        <input data-f="mfr" value="${esc(c.mfr)}" placeholder="Manufacturer" list="mfrList">
+        <input data-f="name" value="${esc(c.name)}" placeholder="Model name">
+        <input class="mono" data-f="model" value="${esc(c.model)}" placeholder="Model #">
+        <input class="mono" data-f="serial" value="${esc(c.serial)}" placeholder="Serial #">
+      </div>
+      <div class="match">${matchLine(c)}</div>
+    </div>`).join('')+`<datalist id="mfrList"><option>Medtronic</option><option>Abbott</option><option>Boston Scientific</option><option>Biotronik</option><option>MicroPort</option></datalist>`;
+}
+
+$('#compWrap').addEventListener('input',e=>{
+  const box=e.target.closest('.comp'); if(!box) return;
+  const c=state.comps.find(x=>x.id==box.dataset.id); const f=e.target.dataset.f; if(!c||!f) return;
+  c[f]=e.target.value;
+  if(f==='model' && !c.mfr){ const r=lookup(c.model,c.name); if(r){ c.mfr=r.entry.mfr; box.querySelector('[data-f=mfr]').value=c.mfr; } }
+  box.querySelector('.st').innerHTML=statusPill(c);
+  box.querySelector('.match').innerHTML=matchLine(c);
+  update();
+});
+$('#compWrap').addEventListener('click',e=>{
+  const d=e.target.dataset.del; if(d){ state.comps=state.comps.filter(c=>c.id!=d); renderComps(); update(); return; }
+  const set=e.target.dataset.set; if(!set) return;
+  const c=state.comps.find(x=>x.id==e.target.closest('.comp').dataset.id); if(!c) return;
+  if(set==='abandoned') c.abandoned=!c.abandoned;
+  else if(set==='position') c.position = c.position===e.target.dataset.v?'':e.target.dataset.v;
+  else c[set]=e.target.dataset.v;
+  renderComps(); update();
+});
+['#addGen2'].forEach(s=>$(s).addEventListener('click',()=>{state.comps.push(newComp('gen'));renderComps();update();}));
+['#addLead2'].forEach(s=>$(s).addEventListener('click',()=>{const g=state.comps.find(c=>c.role==='gen');state.comps.push(newComp('lead',{mfr:g?g.mfr:''}));renderComps();update();}));
+$('#clearAll').addEventListener('click',()=>{state.comps=[];renderComps();update();});
+
+function readPatient(){
+  return {deviceType:$('#qType').value,dependent:$('#qDep').value,field:$('#qField').value,region:$('#qRegion').value,side:$('#qSide').value,
+    implantDate:$('#qImplant').value,fractured:$('#cFract').checked,extender:$('#cExt').checked,abandoned:$('#cAband').checked,epicardial:$('#cEpi').checked,eri:$('#cEri').checked};
+}
+document.querySelectorAll('#qType,#qDep,#qField,#qRegion,#qSide,#qImplant,#cFract,#cExt,#cAband,#cEpi,#cEri').forEach(el=>el.addEventListener('change',()=>{ if(el.id==='qDep') $('#depFrom').textContent=''; if(el.id==='qImplant') $('#implFrom').textContent=''; update(); }));
+
+const TYPE_LABEL={pm:'Transvenous pacemaker',crtp:'CRT pacemaker (CRT-P)',leadless:'Leadless pacemaker',icd:'Transvenous ICD / CRT-D',sicd:'Subcutaneous ICD',ilr:'Implantable loop recorder',pap:'PA pressure monitor'};
+const SYS_LABEL={conditional:'MRI-conditional',nonconditional:'MRI-nonconditional',unconfirmed:'Not confirmed (managed as nonconditional)'};
+let lastR=null;
+
+let shown=false;
+function update(){
+  syncChips();
+  const p=readPatient();
+  const d=p.implantDate; const wk=weeksSince(d);
+  $('#implHint').textContent = wk===null ? '' : (wk<6 ? `${Math.max(0,Math.floor(wk))} wk ago` : `${(wk/52).toFixed(1)} yr ago`);
+  if(!shown) return;
+  if(!state.comps.length && !['ilr','pap'].includes(p.deviceType)){ $('#result').innerHTML='<div class="empty">Add the generator first (step 1 or 2).</div>'; $('#btnCopy').disabled=true; lastR=null; return; }
+  const R=evaluate(state.comps,p);
+  lastR={R,p};
+  $('#typeHint').textContent = p.deviceType==='auto' && R.type ? 'Detected: '+(TYPE_LABEL[R.type]||R.type) : '';
+  $('#btnCopy').disabled=false;
+  const recs=[...R.recs].filter(Boolean).sort((a,b)=>(parseFloat(a)||99)-(parseFloat(b)||99));
+  const gen=R.components.find(c=>c.role==='gen');
+  const leads=R.components.filter(c=>c.role==='lead');
+  const compRows=R.components.map(c=>{
+    const s=c.db?c.db.mri:'unknown';
+    const pill=s==='conditional'?'<span class="pill ok">MR-conditional</span>':s==='nonconditional'?'<span class="pill warn">Nonconditional</span>':'<span class="pill unk">Not confirmed</span>';
+    return `<tr><td>${c.role==='gen'?'Generator':'Lead'+(c.position?' '+esc(c.position):'')}${c.abandoned?' <span class="pill stop">abandoned</span>':''}</td><td>${esc((c.db&&c.db.mfr)||c.mfr)} ${esc((c.db&&c.db.name)||c.name)}<div class="match mono">${esc(c.model)}${c.serial?' · SN '+esc(c.serial):''}</div></td><td>${pill}</td></tr>`;
+  }).join('');
+  const items=R.items.length?`<ul class="items">${R.items.map(i=>`<li class="${i.lvl}">${esc(i.text)} ${i.rec?`<span class="rec">· CCS ${esc(i.rec.split(',').map(x=>/^\d/.test(x.trim())?'Rec '+x.trim():x.trim()).join(', '))}</span>`:''}</li>`).join('')}</ul>`:'<p class="hint">None identified.</p>';
+  const icon={ok:'✓',warn:'!',stop:'✕',unk:'?'}[R.level];
+  $('#result').innerHTML=`
+    <div class="verdict ${R.level}"><div class="big">${icon}</div><h3>${esc(R.title)}</h3><p>${esc(R.summary)}</p></div>
+    <div class="facts">
+      <div class="fact"><div class="k">Device</div><div class="v">${esc(TYPE_LABEL[R.type]||'—')}</div></div>
+      <div class="fact"><div class="k">System</div><div class="v">${esc({conditional:'MR-conditional',nonconditional:'Nonconditional',unconfirmed:'Not confirmed'}[R.system]||'—')}</div></div>
+      <div class="fact"><div class="k">Field</div><div class="v">${esc(R.field.split(';')[0]||'—')}</div></div>
+      <div class="fact"><div class="k">Dependent</div><div class="v">${p.dependent==='yes'?'Yes':p.dependent==='no'?'No':'Unknown'}</div></div>
+    </div>
+    ${R.program.length?`<div class="sec"><h4>Programming</h4><ol class="chk">${R.program.map(x=>`<li>${esc(x)}</li>`).join('')}</ol></div>`:''}
+    ${R.supervise.length?`<div class="sec"><h4>Monitoring</h4><ol class="chk">${R.supervise.map(x=>`<li>${esc(x)}</li>`).join('')}</ol></div>`:''}
+    ${R.items.length?`<div class="sec"><h4>Cautions</h4>${items}</div>`:''}
+    <details><summary>Components</summary><table><tbody>${compRows}</tbody></table></details>
+    <details><summary>Protocol checklist (Figs 1–3)</summary>
+      <ol class="chk" style="margin-top:8px"><li><b>Pre:</b> confirm need and consider alternatives. Review CXR for abandoned or fractured leads and extenders. Device clinic checklist. Same-day MRI and device appointments.</li>
+      <li><b>Intra:</b> interrogate and program. Continuous ECG, NIBP and SpO₂. Minimum sequences and monitor SAR. Arrest cart available.</li>
+      <li><b>Post:</b> interrogate and restore settings. If anything changed, follow up in about 1 week. Report programming and artifacts.</li></ol></details>
+    <p class="hint" style="margin-top:10px">CCS 2021: ${recs.map(r=>/^\d/.test(r)?'Rec '+r:r).join(', ')}</p>`;
+}
+
+function summaryText(){
+  if(!lastR) return '';
+  const {R,p}=lastR;
+  const L=[];
+  L.push('CIED MRI ASSESSMENT (CCS/CanSCMR/CHRS 2021)');
+  L.push('Result: '+R.title);
+  L.push(R.summary);
+  L.push('');
+  L.push('Device type: '+(TYPE_LABEL[R.type]||'-'));
+  L.push('System status: '+(SYS_LABEL[R.system]||'-'));
+  L.push('Field strength: '+R.field);
+  L.push('Dependency: '+(p.dependent==='yes'?'Dependent':p.dependent==='no'?'Not dependent':'Unknown (treated as dependent)'));
+  L.push('');
+  L.push('Components:');
+  R.components.forEach(c=>L.push(` - ${c.role==='gen'?'Generator':'Lead'+(c.position?' '+c.position:'')}${c.abandoned?' (abandoned)':''}: ${(c.db&&c.db.mfr)||c.mfr} ${(c.db&&c.db.name)||c.name} ${c.model}${c.serial?' SN '+c.serial:''} [${c.db?c.db.mri:'not confirmed'}]`));
+  if(R.program.length){L.push('');L.push('Programming:');R.program.forEach((x,i)=>L.push(` ${i+1}. ${x}`));}
+  if(R.supervise.length){L.push('');L.push('Monitoring/supervision:');R.supervise.forEach(x=>L.push(' - '+x));}
+  if(R.items.length){L.push('');L.push('Cautions/notes:');R.items.forEach(i=>L.push(` - [${i.lvl.toUpperCase()}] ${i.text}${i.rec?' (CCS '+i.rec+')':''}`));}
+  L.push('');
+  L.push('Decision support only. Confirm with the manufacturer MRI lookup and the device team.');
+  return L.join('\n');
+}
+$('#btnCopy').addEventListener('click',async()=>{
+  try{ await navigator.clipboard.writeText(summaryText()); toast('Summary copied'); }
+  catch(e){ const ta=document.createElement('textarea'); ta.value=summaryText(); document.body.appendChild(ta); ta.select(); try{document.execCommand('copy');toast('Summary copied');}catch(_){toast('Copy failed');} ta.remove(); }
+});
+
+// ---------- Apply extraction ----------
+function applyExtraction(x,source){
+  const comps=(x.components||[]).filter(c=>c && (c.model||c.name));
+  if(!comps.length) return false;
+  state.comps=comps.map(c=>newComp(c.role==='lead'?'lead':'gen',c));
+  // make sure the first component is a generator if any
+  state.comps.sort((a,b)=>(a.role==='gen'?0:1)-(b.role==='gen'?0:1));
+  if(x.dependent==='yes'||x.dependent==='no'){ $('#qDep').value=x.dependent; $('#depFrom').textContent='· from '+source; }
+  const gd=x.implantDate || (state.comps.map(c=>c.implantDate).filter(Boolean).sort().pop()||'');
+  const latest=[gd,...state.comps.map(c=>c.implantDate)].filter(Boolean).sort().pop();
+  if(latest){ $('#qImplant').value=latest; $('#implFrom').textContent='· from '+source; }
+  const f=x.flags||{};
+  if(f.abandoned||state.comps.some(c=>c.abandoned)) $('#cAband').checked=true;
+  if(f.epicardial) $('#cEpi').checked=true;
+  if(f.fractured) $('#cFract').checked=true;
+  if(f.extender) $('#cExt').checked=true;
+  if(f.eri) $('#cEri').checked=true;
+  if(x.deviceType && TYPE_LABEL[x.deviceType]) $('#qType').value='auto';
+  renderComps(); update();
+  return true;
+}
+
+// ---------- AI extraction ----------
+const AI_PROMPT = `You extract cardiac implantable electronic device (CIED) information from clinical text or screenshots (programmer screens, interrogation reports, device ID cards, X-ray or clinic notes).
+Return ONLY a JSON object, no prose, in this shape:
+{"components":[{"role":"gen"|"lead","position":"RA"|"RV"|"LV"|"","mfr":"Medtronic|Abbott|Boston Scientific|Biotronik|MicroPort|other","name":"model name as written","model":"model number as written (e.g. W1DR01, 5076-52, PM2272, L331)","serial":"serial number or empty","implantDate":"YYYY-MM-DD or empty","abandoned":true|false}],
+"deviceType":"pm"|"crtp"|"leadless"|"icd"|"sicd"|"ilr"|"pap"|"",
+"dependent":"yes"|"no"|"",
+"implantDate":"YYYY-MM-DD of most recent generator or lead implant/revision, or empty",
+"flags":{"abandoned":bool,"epicardial":bool,"fractured":bool,"extender":bool,"eri":bool},
+"notes":"short note on anything unreadable"}
+Rules: copy model and serial numbers exactly as shown, and do not guess or invent them. St. Jude Medical = Abbott; Sorin/LivaNova/ELA = MicroPort. Include every lead, including abandoned or capped ones. "dependent" is "yes" only if the source states dependency or no underlying/escape rhythm, "no" only if it states an adequate intrinsic rhythm or non-dependency, otherwise "". Set eri true if the battery is at ERI/RRT/EOS. Use empty strings when unknown. Ignore patient names and identifiers.`;
+
+function parseJSON(t){
+  t=String(t||'').trim().replace(/^```(?:json)?/i,'').replace(/```$/,'').trim();
+  const a=t.indexOf('{'), b=t.lastIndexOf('}');
+  if(a<0||b<0) throw new Error('No JSON');
+  return JSON.parse(t.slice(a,b+1));
+}
+function normAI(x){
+  const o={components:[],dependent:x.dependent||'',implantDate:parseDate(x.implantDate)||'',flags:x.flags||{},deviceType:x.deviceType||''};
+  (x.components||[]).forEach(c=>{ o.components.push({role:c.role==='lead'?'lead':'gen',position:c.position||'',mfr:c.mfr&&c.mfr!=='other'?c.mfr:'',name:c.name||'',model:c.model||'',serial:c.serial||'',implantDate:parseDate(c.implantDate)||'',abandoned:!!c.abandoned}); });
+  o.components.forEach(c=>{ if(!c.mfr){ const r=lookup(c.model,c.name); if(r) c.mfr=r.entry.mfr; } });
+  return o;
+}
+
+async function runAI(input,images,statusEl){
+  statusEl.className='status'; statusEl.textContent='Reading…';
+  const opts={modelTier:'default',cache:false};
+  if(images&&images.length) opts.images=images;
+  const res=await sample(input,opts);
+  const x=normAI(parseJSON(res.text));
+  return x;
+}
+
+$('#btnParse').addEventListener('click',async()=>{
+  const text=$('#pasteText').value.trim(); const st=$('#pasteStatus');
+  if(!text){st.className='status err';st.textContent='Paste some device information first.';return;}
+  const btn=$('#btnParse'); btn.disabled=true;
+  try{
+    let x=null, src='pasted text';
+    if(sample && $('#useAiText').checked){
+      try{ x=await runAI(AI_PROMPT+'\n\nSOURCE TEXT:\n'+text,null,st); }
+      catch(e){ if(e&&e.code==='not_granted'){ sample=null; setAiChip(); } x=null; }
+    }
+    if(!x||!x.components.length){ x=localExtract(text); }
+    const ok=applyExtraction(x,src);
+    st.className=ok?'status':'status err';
+    st.textContent= ok ? `✓ ${state.comps.length} component(s) found` : 'No models recognised. Add them in step 2.';
+    if(!ok){ state.comps=[newComp('gen',{mfr:detectMfr(text)})]; renderComps(); update(); }
+  } finally { btn.disabled=false; }
+});
+
+$('#btnSample').addEventListener('click',()=>{
+  $('#pasteText').value=`Device: Medtronic Azure XT DR MRI SureScan  Model W1DR01  SN: RNB612345S  Implant date: 2019-03-14
+RA lead: CapSureFix Novus MRI SureScan 5076-52  SN PJN1234567  implanted 2019-03-14
+RV lead: CapSureFix Novus MRI SureScan 5076-58  SN PJN7654321  implanted 2019-03-14
+Battery: OK (8.5 yrs)  Mode DDDR 60/130
+Underlying rhythm: complete heart block, no escape rhythm at VVI 30`;
+  $('#btnParse').click();
+});
+
+function setAiChip(){ const w=$('#aiTextWrap'); if(w) w.hidden=!sample; }
+
+(async()=>{
+  try{
+    if(window.claude && typeof window.claude.use==='function'){
+      sample=await window.claude.use('sample');
+      
+    }
+  }catch(e){ sample=null; }
+  setAiChip();
+})();
+setTimeout(()=>{ if(!sample) setAiChip(); },11000);
+
+// chips for selects and flag checkboxes
+function buildChips(){
+  document.querySelectorAll('select[data-chips]').forEach(sel=>{
+    const box=document.createElement('div'); box.className='chips'; box.dataset.for=sel.id;
+    [...sel.options].forEach(o=>{ const b=document.createElement('button'); b.className='chip'; b.textContent=o.text; b.dataset.v=o.value;
+      b.addEventListener('click',()=>{ sel.value=o.value; sel.dispatchEvent(new Event('change')); }); box.appendChild(b); });
+    sel.after(box);
+  });
+  document.querySelectorAll('.chip[data-cb]').forEach(b=>b.addEventListener('click',()=>{ const cb=document.getElementById(b.dataset.cb); cb.checked=!cb.checked; cb.dispatchEvent(new Event('change')); }));
+}
+function syncChips(){
+  document.querySelectorAll('.chips[data-for]').forEach(box=>{ const v=document.getElementById(box.dataset.for).value; box.querySelectorAll('.chip').forEach(b=>b.classList.toggle('on',b.dataset.v===v)); });
+  document.querySelectorAll('.chip[data-cb]').forEach(b=>b.classList.toggle('on',document.getElementById(b.dataset.cb).checked));
+}
+$('#btnCheck').addEventListener('click',()=>{ shown=true; $('#resultCard').hidden=false; update(); $('#resultCard').scrollIntoView({behavior:'smooth',block:'start'}); });
+buildChips();
+renderComps(); update();
+</script>
+</body>
+</html>
